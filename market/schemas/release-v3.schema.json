@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Easylsp release v3",
+  "type": "object",
+  "required": ["formatVersion", "catalogPluginId", "publisherId", "releaseId", "versionCode", "versionName", "name", "description", "license", "sourceUrl", "channel", "changelog", "publishedAt", "runtime", "pluginAbi", "sdkVersion", "minHostVersion", "requiredCapabilities", "artifacts", "target"],
+  "properties": {
+    "formatVersion": {"const": 3},
+    "catalogPluginId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "publisherId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "releaseId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "versionCode": {"type": "integer", "minimum": 1},
+    "versionName": {"type": "string", "minLength": 1},
+    "name": {"type": "string", "minLength": 1},
+    "description": {"type": "string"},
+    "license": {"type": "string", "minLength": 1},
+    "sourceUrl": {"type": "string", "pattern": "^https://"},
+    "channel": {"type": "string", "minLength": 1},
+    "changelog": {"type": "string"},
+    "publishedAt": {"type": "string", "minLength": 1},
+    "runtime": {"enum": ["NATIVE", "BEANSHELL"]},
+    "pluginAbi": {"const": 1},
+    "sdkVersion": {"type": "string", "minLength": 1},
+    "minHostVersion": {"type": "integer", "minimum": 1, "maximum": 9},
+    "requiredCapabilities": {"type": "array", "uniqueItems": true, "items": {"enum": ["native.symbol", "native.elf-vaddr", "native.module-lifecycle", "java.beanshell"]}},
+    "artifacts": {"type": "array", "minItems": 1, "maxItems": 1, "items": {"type": "object", "required": ["abi", "minApi", "artifactPath"], "properties": {"abi": {"enum": ["arm64-v8a", "any"]}, "minApi": {"type": "integer", "minimum": 1, "maximum": 34}, "artifactPath": {"enum": ["native/arm64-v8a/plugin.so", "java/main.java"]}}}},
+    "target": {"type": "object", "required": ["packageName", "processScope"], "properties": {"packageName": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)+$"}, "processScope": {"enum": ["main", "children", "all", "exact"]}, "processName": {"type": "string"}, "minVersionCode": {"type": "integer", "minimum": 0}, "maxVersionCode": {"type": "integer", "minimum": 0}}},
+    "config": {"type": "object", "required": ["version", "schemaPath", "defaults"], "properties": {"version": {"type": "integer", "minimum": 1}, "schemaPath": {"const": "config.schema.json"}, "defaults": {"type": "object"}}}
+  }
+}

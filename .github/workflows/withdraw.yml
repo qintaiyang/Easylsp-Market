@@ -1,0 +1,56 @@
+name: Withdraw an official release
+on:
+  workflow_dispatch:
+    inputs:
+      catalog_plugin_id:
+        required: true
+        description: Exact published plugin identity
+      release_id:
+        required: true
+        description: Exact published release identity
+      reason:
+        required: true
+        description: Public withdrawal reason
+permissions:
+  contents: read
+concurrency:
+  group: official-market-publish
+  cancel-in-progress: false
+jobs:
+  withdraw:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: market-release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record withdrawal and sign updated catalog
+        env:
+          MARKET_SIGNING_KEY: ${{ secrets.MARKET_SIGNING_KEY }}
+          PLUGIN_ID: ${{ inputs.catalog_plugin_id }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          WITHDRAWAL_REASON: ${{ inputs.reason }}
+        run: |
+          umask 077
+          export MARKET_KEY_FILE="$RUNNER_TEMP/market-key.pem"
+          printf '%s\n' "$MARKET_SIGNING_KEY" > "$MARKET_KEY_FILE"
+          trap 'rm -f "$MARKET_KEY_FILE"' EXIT
+          python3 market/scripts/github_market.py withdraw "$PLUGIN_ID" "$RELEASE_ID" "$WITHDRAWAL_REASON"
+          git config user.name 'Easylsp market'
+          git config user.email 'market@users.noreply.github.com'
+          git add market/catalog market/public
+          git commit -m 'Record official withdrawal'
+          git push
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: market/public
+  deploy:
+    needs: withdraw
+    runs-on: ubuntu-latest
+    environment: github-pages
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/deploy-pages@v4

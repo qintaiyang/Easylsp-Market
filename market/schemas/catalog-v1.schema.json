@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["schema", "catalogRevision", "releases"],
+  "properties": {
+    "schema": {"const": 1}, "catalogRevision": {"type": "string", "minLength": 1},
+    "releases": {"type": "array", "items": {"type": "object", "required": ["catalogPluginId", "publisherId", "releaseId", "versionCode", "state", "downloadUrl", "signatureUrl", "reportUrl"], "properties": {"state": {"enum": ["PUBLISHED", "WITHDRAWN"]}, "versionCode": {"type": "integer", "minimum": 1}}}}
+  }
+}

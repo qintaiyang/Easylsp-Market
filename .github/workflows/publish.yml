@@ -1,0 +1,55 @@
+name: Publish reviewed immutable candidate
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Successful candidate Actions run ID
+        required: true
+      artifact_id:
+        description: Immutable reviewed-candidate artifact ID from that run
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: official-market-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: market-release
+    permissions:
+      contents: write
+      actions: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sign the selected immutable artifact and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MARKET_SIGNING_KEY: ${{ secrets.MARKET_SIGNING_KEY }}
+          CANDIDATE_RUN: ${{ inputs.run_id }}
+          CANDIDATE_ARTIFACT: ${{ inputs.artifact_id }}
+        run: |
+          umask 077
+          export MARKET_KEY_FILE="$RUNNER_TEMP/market-key.pem"
+          printf '%s\n' "$MARKET_SIGNING_KEY" > "$MARKET_KEY_FILE"
+          trap 'rm -f "$MARKET_KEY_FILE"' EXIT
+          python3 market/scripts/github_market.py publish "$CANDIDATE_RUN" "$CANDIDATE_ARTIFACT"
+          git config user.name 'Easylsp market'
+          git config user.email 'market@users.noreply.github.com'
+          git add market/catalog market/public
+          git commit -m 'Publish reviewed candidate'
+          git push
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: market/public
+  deploy:
+    needs: publish
+    runs-on: ubuntu-latest
+    environment: github-pages
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/deploy-pages@v4
