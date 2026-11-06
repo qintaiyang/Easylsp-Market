@@ -1,9 +1,11 @@
 # Release and signed catalog protocol v3
 
-This repository contains preparation tooling. No official marketplace, production
-key or OAuth App is configured, and no public content is uploaded by these scripts.
-The APK's release importer is local/offline; imported publisher IDs are unverified
-claims and appear as `IMPORTED_RELEASE`, never as an authenticated marketplace author.
+Official repository: https://github.com/qintaiyang/Easylsp-Market ; signed catalog:
+https://qintaiyang.github.io/Easylsp-Market/catalog.json . Public browsing and downloads
+need no login. Verified official downloads appear as `MARKET`; local ZIP publisher IDs
+remain unverified `IMPORTED_RELEASE` claims. Author credentials stay in encrypted
+Android storage. Device Flow requires an owner-created OAuth App Client ID; explicit
+author-token login is also available. See OPERATIONS.md for protected publishing.
 
 A ZIP contains `manifest.json`, `README.md`, `LICENSE`, one native
 `native/arm64-v8a/plugin.so` or `java/main.java`, optional native `src/`/`include/`,
@@ -19,8 +21,7 @@ A source-less native release imports a successful precompiled build; its editor
 contains an explicit `#error` marker rather than fabricated source.
 
 Required capabilities currently accepted: `native.symbol`, `native.elf-vaddr`,
-`native.module-lifecycle`, `native.chain`, `native.jni-register`, `native.intercept`, `java.beanshell`. JNI registration and intercept are
-not declared supported. Installation and publication are separate operations.
+`native.module-lifecycle`, `native.chain`, `native.jni-register`, `native.intercept`, `java.beanshell`. Enhanced capabilities require the appended v1 SDK fields and a supported ARM64 environment. Installation and publication are separate operations.
 
 ## Ed25519 envelope
 
