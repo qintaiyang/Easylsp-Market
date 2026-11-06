@@ -39,8 +39,10 @@ jobs:
           git config user.name 'Easylsp market'
           git config user.email 'market@users.noreply.github.com'
           git add market/catalog market/public
-          git commit -m 'Publish reviewed candidate'
-          git push
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish reviewed candidate'
+            git push
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: market/public

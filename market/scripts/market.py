@@ -162,10 +162,18 @@ def verify(payload_path, metadata_path, public_key):
 def catalog(records, publishers, revision):
     owners = {row['publisherId']: row for row in publishers}
     identities = set()
+    plugin_owners, versions = {}, set()
     releases = []
     for record in records:
         if record['publisherId'] not in owners or not isinstance(owners[record['publisherId']]['githubAccountId'], int):
             raise ValueError('unregistered publisher')
+        plugin_id = record['catalogPluginId']
+        if plugin_id in plugin_owners and plugin_owners[plugin_id] != record['publisherId']:
+            raise ValueError('catalog identity cannot change publisher')
+        plugin_owners[plugin_id] = record['publisherId']
+        version = (plugin_id, record['versionCode'])
+        if version in versions: raise ValueError('duplicate release versionCode')
+        versions.add(version)
         identity = (record['catalogPluginId'], record['releaseId'])
         if identity in identities:
             raise ValueError('duplicate immutable release identity')

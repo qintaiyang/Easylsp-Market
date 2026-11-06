@@ -44,6 +44,19 @@ def api(path, method='GET', body=None, binary=False):
         return data if binary else json.loads(data) if data else None
 
 
+def validate_identity(manifest, resume=None):
+    for path in (ROOT / 'catalog').glob('*.json'):
+        previous = json.loads(path.read_text())
+        if previous['catalogPluginId'] != manifest['catalogPluginId']: continue
+        if previous['publisherId'] != manifest['publisherId']:
+            raise ValueError('catalog identity belongs to another registered publisher')
+        if previous['releaseId'] == manifest['releaseId']:
+            if resume and previous.get('candidateRunId') == resume[0] and previous.get('candidateArtifactId') == resume[1]: continue
+            raise ValueError('release identity is already published')
+        if previous['versionCode'] >= manifest['versionCode']:
+            raise ValueError('versionCode must exceed previous published/withdrawn versions')
+
+
 def candidate(number, output):
     pr = api(f'/repos/{REPO}/pulls/{number}')
     files = api(f'/repos/{REPO}/pulls/{number}/files?per_page=100')
@@ -73,6 +86,7 @@ def candidate(number, output):
     archive = output / 'plugin.zip'
     archive.write_bytes(api(f'/repos/{repository}/releases/assets/{asset_id}', binary=True))
     manifest = market.read_release(archive)
+    validate_identity(manifest)
     for field in ('catalogPluginId', 'publisherId', 'releaseId', 'versionCode'):
         if manifest[field] != submission[field]:
             raise ValueError('submission/manifest mismatch: ' + field)
@@ -108,22 +122,37 @@ def publish(run_id, artifact_id):
     with tempfile.TemporaryDirectory() as directory:
         directory = Path(directory); archive = directory / 'plugin.zip'; archive.write_bytes(archive_bytes)
         manifest = market.read_release(archive)
+        validate_identity(manifest, (run_id, artifact_id))
         if manifest != review['manifest']:
             raise ValueError('candidate manifest mismatch')
         context = {key: manifest[key] for key in ('catalogPluginId', 'publisherId', 'releaseId', 'versionCode')}
         signature = directory / 'plugin.signature.json'
         market.sign(archive, Path(os.environ['MARKET_KEY_FILE']), 'market-2026', 'release', context, signature)
         tag = 'plugin-' + manifest['catalogPluginId'] + '-' + manifest['releaseId']
-        # Existing identities fail explicitly: never overwrite official assets or release records.
-        release = api(f'/repos/{REPO}/releases', 'POST', {'tag_name': tag, 'name': manifest['name'] + ' ' + manifest['versionName'], 'body': f"Reviewed PR #{review['pr']}; Actions run {run_id}, artifact {artifact_id}.\nSource: {manifest['sourceUrl']}\n\n{manifest['changelog']}", 'draft': False})
+        provenance = f"Reviewed PR #{review['pr']}; Actions run {run_id}, artifact {artifact_id}."
+        try:
+            release = api(f'/repos/{REPO}/releases/tags/{tag}')
+        except urllib.error.HTTPError as error:
+            if error.code != 404: raise
+            release = api(f'/repos/{REPO}/releases', 'POST', {'tag_name': tag, 'name': manifest['name'] + ' ' + manifest['versionName'], 'body': f"{provenance}\nSource: {manifest['sourceUrl']}\n\n{manifest['changelog']}", 'draft': True})
+        if not release['body'].startswith(provenance):
+            raise ValueError('official tag belongs to a different reviewed candidate')
         urls = {}
         for name, payload in [('plugin.zip', archive_bytes), ('plugin.signature.json', signature.read_bytes()), ('review.json', json.dumps(review, ensure_ascii=False, indent=2).encode())]:
-            url = f"https://uploads.github.com/repos/{REPO}/releases/{release['id']}/assets?name={name}"
-            uploaded = api(url, 'POST', payload); urls[name] = uploaded['browser_download_url']
+            uploaded = next((a for a in release['assets'] if a['name'] == name), None)
+            if uploaded:
+                if api(f"/repos/{REPO}/releases/assets/{uploaded['id']}", binary=True) != payload:
+                    raise ValueError('official asset already exists with different bytes; never overwrite')
+            else:
+                url = f"https://uploads.github.com/repos/{REPO}/releases/{release['id']}/assets?name={name}"
+                uploaded = api(url, 'POST', payload)
+            urls[name] = uploaded['browser_download_url']
+        if release['draft']:
+            api(f"/repos/{REPO}/releases/{release['id']}", 'PATCH', {'draft': False})
         record = {**manifest, 'state': 'PUBLISHED', 'downloadUrl': urls['plugin.zip'], 'signatureUrl': urls['plugin.signature.json'], 'reportUrl': f'https://github.com/{REPO}/issues/new?template=report.md', 'reviewUrl': urls['review.json'], 'candidateRunId': run_id, 'candidateArtifactId': artifact_id}
         path = ROOT / 'catalog' / (manifest['catalogPluginId'] + '--' + manifest['releaseId'] + '.json')
-        if path.exists():
-            raise ValueError('immutable catalog record already exists')
+        if path.exists() and json.loads(path.read_text()) != record:
+            raise ValueError('immutable catalog record already exists with different metadata')
         path.write_text(json.dumps(record, ensure_ascii=False, indent=2) + '\n')
     generate_catalog(str(run_id) + '-' + str(artifact_id))
 
