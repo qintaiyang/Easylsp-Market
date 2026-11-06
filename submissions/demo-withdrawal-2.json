@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "catalogPluginId": "qintaiyang.demo.early",
+  "publisherId": "qintaiyang",
+  "releaseId": "demo-withdrawal-2",
+  "versionCode": 2,
+  "repository": "qintaiyang/Easylsp-Plugins",
+  "repositoryId": 1447671442,
+  "sourceCommit": "6a583976fc0f4f07717d89c589bb109293128c00",
+  "githubReleaseId": 435961760,
+  "assetId": 715452842
+}
