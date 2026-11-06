@@ -30,7 +30,7 @@ def api(path, method='GET', body=None, binary=False):
     headers = {'Accept': 'application/vnd.github+json', 'User-Agent': 'Easylsp-market', 'X-GitHub-Api-Version': '2022-11-28'}
     if TOKEN:
         headers['Authorization'] = 'Bearer ' + TOKEN
-    if binary:
+    if binary and not path.endswith('/zip'):
         headers['Accept'] = 'application/octet-stream'
     if isinstance(body, bytes):
         headers['Content-Type'] = 'application/octet-stream'
@@ -99,6 +99,33 @@ def candidate(number, output):
     print(json.dumps(review, ensure_ascii=False, indent=2))
 
 
+def verify_review(pr, run, review, submission):
+    if not pr['merged'] or pr['head']['sha'] != review['prHead'] or run['head_sha'] != review['prHead']:
+        raise ValueError('merge the exact checked PR before protected publication')
+    files = api(f"/repos/{REPO}/pulls/{review['pr']}/files?per_page=100")
+    if len(files) != 1 or files[0]['filename'] != review['submissionPath'] or not re.fullmatch(r'submissions/[A-Za-z0-9._-]+\.json', files[0]['filename']):
+        raise ValueError('reviewed PR must change only its fixed submission file')
+    content = api(f"/repos/{pr['head']['repo']['full_name']}/contents/{files[0]['filename']}?ref={review['prHead']}")
+    if json.loads(base64.b64decode(content['content'])) != submission:
+        raise ValueError('candidate submission differs from exact PR head')
+    manifest = review['manifest']
+    if not market.identifier(manifest['publisherId']): raise ValueError('invalid publisher')
+    publisher = json.loads((ROOT / 'publishers' / (manifest['publisherId'] + '.json')).read_text())
+    if pr['user']['id'] != publisher['githubAccountId'] or review['accountId'] != publisher['githubAccountId']:
+        raise ValueError('reviewed account does not own publisher identity')
+    repository = submission['repository']
+    if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repository): raise ValueError('invalid repository')
+    author = api('/repos/' + repository)
+    if author['private'] or author['id'] != review['repositoryId'] or author['id'] not in publisher['repositoryIds'] or author['owner']['id'] != publisher['githubAccountId']:
+        raise ValueError('reviewed repository ownership mismatch')
+    for field in ('catalogPluginId', 'publisherId', 'releaseId', 'versionCode'):
+        if manifest[field] != submission[field]: raise ValueError('review identity mismatch: ' + field)
+    for field in ('sourceCommit', 'assetId', 'githubReleaseId'):
+        if review[field] != submission[field]: raise ValueError('review object mismatch: ' + field)
+    if manifest['sourceUrl'] != f"https://github.com/{repository}/tree/{review['sourceCommit']}":
+        raise ValueError('review source commit mismatch')
+
+
 def publish(run_id, artifact_id):
     run = api(f'/repos/{REPO}/actions/runs/{run_id}')
     if run['event'] != 'pull_request' or run['conclusion'] != 'success' or run['path'] != '.github/workflows/candidate.yml':
@@ -110,14 +137,13 @@ def publish(run_id, artifact_id):
     with zipfile.ZipFile(io.BytesIO(raw)) as container:
         if set(container.namelist()) != {'plugin.zip', 'review.json', 'submission.json'}:
             raise ValueError('unexpected candidate artifact files')
+        if any(e.file_size > (32 * 1024 * 1024 if e.filename == 'plugin.zip' else 1024 * 1024) for e in container.infolist()):
+            raise ValueError('candidate artifact entry exceeds limit')
         review = json.loads(container.read('review.json'))
         submission = json.loads(container.read('submission.json'))
         archive_bytes = container.read('plugin.zip')
     pr = api(f"/repos/{REPO}/pulls/{review['pr']}")
-    if not pr['merged'] or pr['head']['sha'] != review['prHead'] or run['head_sha'] != review['prHead']:
-        raise ValueError('merge the exact checked PR before protected publication')
-    if pr['user']['id'] != review['accountId']:
-        raise ValueError('candidate identity mismatch')
+    verify_review(pr, run, review, submission)
     # Only the immutable Actions artifact is consumed below; never fetch the author asset again.
     with tempfile.TemporaryDirectory() as directory:
         directory = Path(directory); archive = directory / 'plugin.zip'; archive.write_bytes(archive_bytes)
@@ -127,8 +153,8 @@ def publish(run_id, artifact_id):
             raise ValueError('candidate manifest mismatch')
         context = {key: manifest[key] for key in ('catalogPluginId', 'publisherId', 'releaseId', 'versionCode')}
         signature = directory / 'plugin.signature.json'
-        market.sign(archive, Path(os.environ['MARKET_KEY_FILE']), 'market-2026', 'release', context, signature)
-        tag = 'plugin-' + manifest['catalogPluginId'] + '-' + manifest['releaseId']
+        market.sign(archive, Path(os.environ['MARKET_KEY_FILE']), os.environ.get('MARKET_KEY_ID', 'market-2026'), 'release', context, signature)
+        tag = 'plugin-' + base64.urlsafe_b64encode((manifest['catalogPluginId'] + '/' + manifest['releaseId']).encode()).decode().rstrip('=')
         provenance = f"Reviewed PR #{review['pr']}; Actions run {run_id}, artifact {artifact_id}."
         try:
             release = api(f'/repos/{REPO}/releases/tags/{tag}')
@@ -162,7 +188,7 @@ def generate_catalog(revision):
     publishers = [json.loads(p.read_text()) for p in (ROOT / 'publishers').glob('*.json')]
     public = ROOT / 'public'; public.mkdir(exist_ok=True)
     index = public / 'catalog.json'; index.write_text(json.dumps(market.catalog(records, publishers, revision), ensure_ascii=False, indent=2) + '\n')
-    market.sign(index, Path(os.environ['MARKET_KEY_FILE']), 'market-2026', 'catalog', {'catalogRevision': revision}, public / 'catalog.signature.json')
+    market.sign(index, Path(os.environ['MARKET_KEY_FILE']), os.environ.get('MARKET_KEY_ID', 'market-2026'), 'catalog', {'catalogRevision': revision}, public / 'catalog.signature.json')
 
 
 if __name__ == '__main__':
