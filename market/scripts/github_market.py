@@ -172,7 +172,8 @@ def publish(run_id, artifact_id):
             else:
                 url = f"https://uploads.github.com/repos/{REPO}/releases/{release['id']}/assets?name={name}"
                 uploaded = api(url, 'POST', payload)
-            urls[name] = uploaded['browser_download_url']
+            # Draft asset URLs use temporary untagged-* names which disappear on publication.
+            urls[name] = f'https://github.com/{REPO}/releases/download/{tag}/{name}'
         if release['draft']:
             api(f"/repos/{REPO}/releases/{release['id']}", 'PATCH', {'draft': False})
         record = {**manifest, 'state': 'PUBLISHED', 'downloadUrl': urls['plugin.zip'], 'signatureUrl': urls['plugin.signature.json'], 'reportUrl': f'https://github.com/{REPO}/issues/new?template=report.md', 'reviewUrl': urls['review.json'], 'candidateRunId': run_id, 'candidateArtifactId': artifact_id}

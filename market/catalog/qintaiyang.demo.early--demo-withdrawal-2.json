@@ -31,10 +31,10 @@
     "processScope": "main"
   },
   "state": "WITHDRAWN",
-  "downloadUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/untagged-72b91dbaa03407894f8a/plugin.zip",
-  "signatureUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/untagged-72b91dbaa03407894f8a/plugin.signature.json",
+  "downloadUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/plugin-cWludGFpeWFuZy5kZW1vLmVhcmx5L2RlbW8td2l0aGRyYXdhbC0y/plugin.zip",
+  "signatureUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/plugin-cWludGFpeWFuZy5kZW1vLmVhcmx5L2RlbW8td2l0aGRyYXdhbC0y/plugin.signature.json",
   "reportUrl": "https://github.com/qintaiyang/Easylsp-Market/issues/new?template=report.md",
-  "reviewUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/untagged-72b91dbaa03407894f8a/review.json",
+  "reviewUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/plugin-cWludGFpeWFuZy5kZW1vLmVhcmx5L2RlbW8td2l0aGRyYXdhbC0y/review.json",
   "candidateRunId": 42142858343,
   "candidateArtifactId": 13468806263,
   "withdrawalReason": "Controlled end-to-end withdrawal drill. Use demo-early-1; this metadata-only test release is withdrawn after validating protected publication.",
