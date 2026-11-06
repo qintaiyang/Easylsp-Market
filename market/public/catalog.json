@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "catalogRevision": "withdraw-42143390730",
+  "catalogRevision": "42146014457-13470092128",
   "releases": [
     {
       "formatVersion": 3,
@@ -83,6 +83,46 @@
       "candidateArtifactId": 13468806263,
       "withdrawalReason": "Controlled end-to-end withdrawal drill. Use demo-early-1; this metadata-only test release is withdrawn after validating protected publication.",
       "withdrawnAt": "2026-11-06T01:23:58.405321+00:00"
+    },
+    {
+      "formatVersion": 3,
+      "catalogPluginId": "qintaiyang.demo.early",
+      "publisherId": "qintaiyang",
+      "releaseId": "demo-app-author-3",
+      "versionCode": 3,
+      "versionName": "1.0-app-author",
+      "name": "Controlled Demo early-symbol",
+      "description": "Integration fixture for io.github.easylsp.demo only. Constructor 8 becomes 1010; preserves errno.",
+      "license": "GPL-3.0-or-later",
+      "sourceUrl": "https://github.com/qintaiyang/Easylsp-Plugins/tree/6a583976fc0f4f07717d89c589bb109293128c00",
+      "channel": "test",
+      "changelog": "Prepared, uploaded and submitted through the actual Android author services and AI tool definitions. Controlled Demo only.",
+      "publishedAt": "2026-11-06T00:00:00Z",
+      "runtime": "NATIVE",
+      "pluginAbi": 1,
+      "sdkVersion": "c-v1-shadowhook201",
+      "minHostVersion": 9,
+      "requiredCapabilities": [
+        "native.symbol"
+      ],
+      "artifacts": [
+        {
+          "abi": "arm64-v8a",
+          "minApi": 34,
+          "artifactPath": "native/arm64-v8a/plugin.so"
+        }
+      ],
+      "target": {
+        "packageName": "io.github.easylsp.demo",
+        "processScope": "main"
+      },
+      "state": "PUBLISHED",
+      "downloadUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/untagged-b4ade530391938fc74e6/plugin.zip",
+      "signatureUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/untagged-b4ade530391938fc74e6/plugin.signature.json",
+      "reportUrl": "https://github.com/qintaiyang/Easylsp-Market/issues/new?template=report.md",
+      "reviewUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/untagged-b4ade530391938fc74e6/review.json",
+      "candidateRunId": 42146014457,
+      "candidateArtifactId": 13470092128
     }
   ]
 }
