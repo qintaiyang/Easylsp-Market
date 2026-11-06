@@ -10,7 +10,7 @@ import subprocess
 import tempfile
 import zipfile
 
-CAPABILITIES = {'native.symbol', 'native.elf-vaddr', 'native.module-lifecycle', 'java.beanshell'}
+CAPABILITIES = {'native.symbol', 'native.elf-vaddr', 'native.module-lifecycle', 'native.chain', 'native.jni-register', 'native.intercept', 'java.beanshell'}
 
 
 def identifier(value):

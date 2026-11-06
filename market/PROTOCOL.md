@@ -1,4 +1,4 @@
-# Offline release and catalog protocol (v3 draft)
+# Release and signed catalog protocol v3
 
 This repository contains preparation tooling. No official marketplace, production
 key or OAuth App is configured, and no public content is uploaded by these scripts.
@@ -19,7 +19,7 @@ A source-less native release imports a successful precompiled build; its editor
 contains an explicit `#error` marker rather than fabricated source.
 
 Required capabilities currently accepted: `native.symbol`, `native.elf-vaddr`,
-`native.module-lifecycle`, `java.beanshell`. JNI registration and intercept are
+`native.module-lifecycle`, `native.chain`, `native.jni-register`, `native.intercept`, `java.beanshell`. JNI registration and intercept are
 not declared supported. Installation and publication are separate operations.
 
 ## Ed25519 envelope

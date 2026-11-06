@@ -176,6 +176,7 @@ def publish(run_id, artifact_id):
         if release['draft']:
             api(f"/repos/{REPO}/releases/{release['id']}", 'PATCH', {'draft': False})
         record = {**manifest, 'state': 'PUBLISHED', 'downloadUrl': urls['plugin.zip'], 'signatureUrl': urls['plugin.signature.json'], 'reportUrl': f'https://github.com/{REPO}/issues/new?template=report.md', 'reviewUrl': urls['review.json'], 'candidateRunId': run_id, 'candidateArtifactId': artifact_id}
+        (ROOT / 'catalog').mkdir(exist_ok=True)
         path = ROOT / 'catalog' / (manifest['catalogPluginId'] + '--' + manifest['releaseId'] + '.json')
         if path.exists() and json.loads(path.read_text()) != record:
             raise ValueError('immutable catalog record already exists with different metadata')
