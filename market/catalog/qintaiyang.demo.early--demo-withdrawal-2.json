@@ -1,0 +1,40 @@
+{
+  "formatVersion": 3,
+  "catalogPluginId": "qintaiyang.demo.early",
+  "publisherId": "qintaiyang",
+  "releaseId": "demo-withdrawal-2",
+  "versionCode": 2,
+  "versionName": "1.0-withdrawal-drill",
+  "name": "Controlled Demo early-symbol",
+  "description": "Integration fixture for io.github.easylsp.demo only. Constructor 8 becomes 1010; preserves errno.",
+  "license": "GPL-3.0-or-later",
+  "sourceUrl": "https://github.com/qintaiyang/Easylsp-Plugins/tree/6a583976fc0f4f07717d89c589bb109293128c00",
+  "channel": "test",
+  "changelog": "Controlled withdrawal exercise. Use demo-early-1 for installation.",
+  "publishedAt": "2026-11-06T00:00:00Z",
+  "runtime": "NATIVE",
+  "pluginAbi": 1,
+  "sdkVersion": "c-v1-shadowhook201",
+  "minHostVersion": 9,
+  "requiredCapabilities": [
+    "native.symbol"
+  ],
+  "artifacts": [
+    {
+      "abi": "arm64-v8a",
+      "minApi": 34,
+      "artifactPath": "native/arm64-v8a/plugin.so"
+    }
+  ],
+  "target": {
+    "packageName": "io.github.easylsp.demo",
+    "processScope": "main"
+  },
+  "state": "PUBLISHED",
+  "downloadUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/untagged-72b91dbaa03407894f8a/plugin.zip",
+  "signatureUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/untagged-72b91dbaa03407894f8a/plugin.signature.json",
+  "reportUrl": "https://github.com/qintaiyang/Easylsp-Market/issues/new?template=report.md",
+  "reviewUrl": "https://github.com/qintaiyang/Easylsp-Market/releases/download/untagged-72b91dbaa03407894f8a/review.json",
+  "candidateRunId": 42142858343,
+  "candidateArtifactId": 13468806263
+}
